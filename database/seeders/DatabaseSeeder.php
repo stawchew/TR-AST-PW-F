@@ -13,13 +13,21 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database.
      */
-    public function run(): void
-    {
-        // User::factory(10)->create();
+    public function run(): void {
+    User::forceCreate([
+        'name' => 'Admin', 'email' => 'admin@tiket.test',
+        'password' => 'password', 'role' => 'admin',
+        'email_verified_at' => now(),
+    ]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+    foreach ([['Budi', 'budi@tiket.test'], ['Sari', 'sari@tiket.test']] as [$n, $e]) {
+        User::forceCreate([
+            'name' => $n, 'email' => $e,
+            'password' => 'password', 'role' => 'user',
+            'email_verified_at' => now(),
         ]);
     }
+
+    $this->call(RouteScheduleSeeder::class);
+    }  
 }
