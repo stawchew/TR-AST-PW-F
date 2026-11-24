@@ -22,7 +22,12 @@
                     <x-nav-link :href="route('user.dashboard')" :active="request()->routeIs('user.dashboard')">
                      Dashboard
                     </x-nav-link>
-                        {{-- TODO: Cari Jadwal, Tiket Saya --}}
+                        <x-nav-link :href="route('user.schedules.index')" :active="request()->routeIs('user.schedules.*') || request()->routeIs('user.tickets.create')">
+                            Cari Jadwal
+                        </x-nav-link>
+                        <x-nav-link :href="route('user.tickets.index')" :active="request()->routeIs('user.tickets.index', 'user.tickets.show', 'user.tickets.edit')">
+                            Tiket Saya
+                        </x-nav-link>
                     @endif
                 </div>
 
@@ -81,6 +86,12 @@
         @else
             <x-responsive-nav-link :href="route('user.dashboard')" :active="request()->routeIs('user.dashboard')">
                 Dashboard
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('user.schedules.index')" :active="request()->routeIs('user.schedules.*')">
+                Cari Jadwal
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('user.tickets.index')" :active="request()->routeIs('user.tickets.index')">
+                Tiket Saya
             </x-responsive-nav-link>
         @endif
     </div>
