@@ -1,6 +1,8 @@
 <?php
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\RouteController;
+use App\Http\Controllers\Admin\ScheduleController;
 
 Route::get('/', fn () => redirect()->route('login'));
 
@@ -21,6 +23,9 @@ Route::middleware('auth')->group(function () {
 // Khusus admin
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
+
+    Route::resource('routes', RouteController::class)->except('show');
+    Route::resource('schedules', ScheduleController::class)->except('show');
 });
 
 // Khusus user
