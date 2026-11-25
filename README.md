@@ -1,58 +1,83 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Pemesanan Tiket Travel & Shuttle Antar-Kota
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi web Laravel (CRUD, Multi-Role & Business Logic) untuk Tugas Rancang Pengembangan Aplikasi Web.
+User memesan tiket shuttle & upload bukti transfer. Admin memverifikasi pembayaran, kursi dipotong otomatis, kode tiket unik terbit.
 
-## About Laravel
+## Fitur Utama
+- Auth (Laravel Breeze) + kolom `role` (`admin` / `user`) + `RoleMiddleware`
+- CRUD rute & jadwal (Admin), katalog jadwal + cari/filter (User)
+- Pemesanan tiket: validasi sisa kursi, total bayar otomatis (`jumlah_penumpang × harga_tiket`)
+- Upload bukti transfer (`Storage::disk('public')`, file lama otomatis dihapus)
+- Verifikasi Admin: **Approve** (`DB::transaction()` kurangi kursi + terbit kode tiket), **Reject**, **Completed**
+- Ownership check: user tidak bisa akses tiket milik user lain (403)
+- Dashboard dinamis per role (agregasi `count()` / `sum()`)
+- Pencarian, filter status, `paginate()->withQueryString()`
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Skema Relasi Tabel
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```
+users 1 ──< tickets >── 1 schedules >── 1 routes
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+| Tabel       | Kolom Penting                                                                                          |
+|-------------|--------------------------------------------------------------------------------------------------------|
+| `users`     | id, name, email, password, role (`admin`/`user`)                                                       |
+| `routes`    | id, origin, destination                                                                                |
+| `schedules` | id, route_id (FK), departure_time, price, total_seats, available_seats                                 |
+| `tickets`   | id, user_id (FK), schedule_id (FK), passenger_count, total_price, payment_proof, status, ticket_code (unique, nullable) |
 
-## Contributing
+Relasi Eloquent:
+- `User hasMany Ticket`, `Ticket belongsTo User`
+- `Route hasMany Schedule`, `Schedule belongsTo Route`
+- `Schedule hasMany Ticket`, `Ticket belongsTo Schedule`
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Status tiket: `pending` → `approved` → `completed`, atau `pending` → `rejected`.
 
-## Code of Conduct
+## Logika Bisnis
+1. User pesan tiket → server cek kursi cukup → hitung total otomatis → status `pending`.
+2. User upload bukti transfer.
+3. Admin **Approve** dalam `DB::transaction()`:
+   - lock baris tiket & jadwal (`lockForUpdate`)
+   - cek status masih `pending` & kursi cukup
+   - `available_seats` dikurangi `passenger_count`
+   - `ticket_code` unik diterbitkan (format `TKT-XXXXXXXX`)
+4. Admin tandai **Completed** setelah perjalanan selesai, atau **Reject** bila pembayaran tidak valid.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Instalasi
 
-## Security Vulnerabilities
+```bash
+git clone https://github.com/stawchew/TR-AST-PW-F.git
+cd TR-AST-PW-F
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+composer install
+npm install && npm run build
 
-## License
+cp .env.example .env
+php artisan key:generate
+# atur DB_DATABASE, DB_USERNAME, DB_PASSWORD di file .env
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+php artisan migrate --seed
+php artisan storage:link
+php artisan serve
+```
+
+Buka http://127.0.0.1:8000
+
+## Akun Demo
+
+| Role  | Email             | Password   |
+|-------|-------------------|------------|
+| Admin | admin@example.com | password   |
+| User  | user1@example.com | password   |
+| User  | user2@example.com | password   |
+
+> Sesuaikan email/password dengan isi `DatabaseSeeder` di repo.
+
+## Pembagian Tugas
+| Anggota | Tugas |
+|---------|-------|
+| 1 | _isi_ |
+| 2 | _isi_ |
+| 3 | _isi_ |
+| 4 | Verifikasi tiket, dashboard admin, dokumentasi (README) |
+"# TR-AST-PW-F" 
