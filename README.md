@@ -49,10 +49,10 @@ Status tiket: `pending` → `approved` → `completed`, atau `pending` → `reje
 git clone https://github.com/stawchew/TR-AST-PW-F.git
 cd TR-AST-PW-F
 
-composer install
+composer install && composer update
 npm install && npm run build
 
-cp .env.example .env
+copy .env.example .env
 php artisan key:generate
 # atur DB_DATABASE, DB_USERNAME, DB_PASSWORD di file .env
 
@@ -67,17 +67,16 @@ Buka http://127.0.0.1:8000
 
 | Role  | Email             | Password   |
 |-------|-------------------|------------|
-| Admin | admin@example.com | password   |
-| User  | user1@example.com | password   |
-| User  | user2@example.com | password   |
+| Admin | admin@tiket.test  | password   |
+| User  | budi@tiket.test   | password   |
 
 > Sesuaikan email/password dengan isi `DatabaseSeeder` di repo.
 
 ## Pembagian Tugas
 | Anggota | Tugas |
 |---------|-------|
-| 1 | _isi_ |
-| 2 | _isi_ |
-| 3 | _isi_ |
+| 1 | Setup proyek, migrasi & seeder database, autentikasi multi-role, dan RoleMiddleware |
+| 2 | CRUD data master rute (routes) termasuk upload gambar dan jadwal keberangkatan (schedules) |
+| 3 | Dashboard user, katalog jadwal, pemesanan tiket (kalkulasi otomatis & upload bukti), edit/batal tiket, serta ownership check |
 | 4 | Verifikasi tiket, dashboard admin, dokumentasi (README) |
-"# TR-AST-PW-F" 
+
